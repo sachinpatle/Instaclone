@@ -14,7 +14,7 @@ res.send("hello user");
 
 router.post("/signup",(req,res)=>
 { 
-    const {name,email,password} =req.body
+    const {name,email,password,pic} =req.body
     if(!name || !email || !password)
     {
        return  res.status(400).json({error:"please add all the fields"});
@@ -22,14 +22,15 @@ router.post("/signup",(req,res)=>
     bcrypt.hash(password,12).then((hashedpassword)=>{
         User.findOne({email:email})
         .then((savedUser)=>{
-            if(savedUser)
+            if(savedUser) 
             {
             return  res.status(400).json({error:"User already existed with that email"});
             }
             const user =new User({
             email,
             password:hashedpassword,
-            name
+            name,
+            pic
             })
             user.save()
             .then((user)=>{
@@ -63,8 +64,9 @@ return res.status(400).json({error:"Invalid email or password"});
         bcrypt.compare(password,savedUser.password)
         .then((domatch)=>{
             if(domatch){
+                const {_id,name,email,followers,following,pic}= savedUser
                 const token=jwt.sign({_id:savedUser._id},JWT_SECRET);
-                res.json({token});
+                res.json({token,user:{_id,name,email,followers,following,pic}});
             }
             else{
                 return res.status(400).json({error:"Invalid email or password"});
@@ -72,7 +74,6 @@ return res.status(400).json({error:"Invalid email or password"});
 
         })
         .catch((error)=>{console.log(error)})
-        
     })
 
 })
